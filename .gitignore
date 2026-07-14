@@ -82,3 +82,7 @@ pnpm-debug.log*
 ._*
 Thumbs.db
 Desktop.ini
+
+# Docker image tar files and tools
+*.tar
+cloudflared.exe

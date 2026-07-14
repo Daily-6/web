@@ -37,12 +37,8 @@ docker compose -f infra/compose.yaml up
 - SQLite 数据库: backend/data/course-demo.sqlite（首次启动自动创建）
 - Docker 中数据库挂载于 volume course-data，路径 /app/backend/data/
 
-六、课程改进建议
 
-七、课程最印象深刻的地方
-
-
-八、功能清单
+六、功能清单
 ------------
 [x] 赛程浏览（按小组筛选，104场比赛）
 [x] 球队信息（48支球队，分组展示，中文队名）
@@ -57,7 +53,7 @@ docker compose -f infra/compose.yaml up
 [x] Docker Compose 一键部署
 
 
-九、额外实现功能介绍
+七、额外实现功能介绍
 --------------------
 - 从 worldcup26.ir 获取2026世界杯真实数据作为种子数据
 - 48支球队中文名翻译
