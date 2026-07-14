@@ -35,7 +35,7 @@ export interface Match {
   awayScore: number | null;
   matchDate: string;
   status: "scheduled" | "live" | "finished";
-  stage: "group" | "round16" | "quarter" | "semi" | "third" | "final";
+  stage: "group" | "round32" | "round16" | "quarter" | "semi" | "third" | "final";
   venue: string;
   groupName: string;
   homeTeam?: Team;

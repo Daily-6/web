@@ -5,6 +5,7 @@ import { Match, ApiResponse } from "@/lib/types";
 import Link from "next/link";
 
 const ROUND_LABELS: Record<string, string> = {
+  round32: "1/16决赛",
   round16: "1/8决赛",
   quarter: "1/4决赛",
   semi: "半决赛",
@@ -12,7 +13,7 @@ const ROUND_LABELS: Record<string, string> = {
   final: "决赛",
 };
 
-const ROUND_ORDER = ["round16", "quarter", "semi", "third", "final"];
+const ROUND_ORDER = ["round32", "round16", "quarter", "semi", "third", "final"];
 
 export function BracketView() {
   const [matches, setMatches] = useState<Match[]>([]);

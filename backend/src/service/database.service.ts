@@ -101,7 +101,7 @@ export class DatabaseService {
         away_score INTEGER,
         match_date TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'scheduled' CHECK(status IN ('scheduled','live','finished')),
-        stage TEXT NOT NULL DEFAULT 'group' CHECK(stage IN ('group','round16','quarter','semi','third','final')),
+        stage TEXT NOT NULL DEFAULT 'group' CHECK(stage IN ('group','round32','round16','quarter','semi','third','final')),
         venue TEXT DEFAULT '',
         group_name TEXT DEFAULT ''
       )
