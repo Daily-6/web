@@ -23,6 +23,7 @@ export function CourseDashboard() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,6 +47,8 @@ export function CourseDashboard() {
         if (reason instanceof Error && reason.name !== "AbortError") {
           setError(reason.message);
         }
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -81,12 +84,26 @@ export function CourseDashboard() {
         </div>
       </div>
 
-      {error ? (
+      {loading ? (
+        <div className="grid gap-5 md:grid-cols-3" aria-label="正在加载课程">
+          {[0, 1, 2].map((item) => (
+            <div
+              className="h-48 animate-pulse rounded-2xl bg-slate-200"
+              key={item}
+            />
+          ))}
+        </div>
+      ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-900">
           <p className="font-semibold">暂时无法加载课程。</p>
           <p className="mt-2 text-sm">请确认后端已在 7001 端口启动：{error}</p>
         </div>
-      ) : courses.length > 0 ? (
+      ) : courses.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
+          <p className="text-lg font-semibold text-slate-500">暂无课程数据</p>
+          <p className="mt-2 text-sm text-slate-400">课程数据将从 API 加载</p>
+        </div>
+      ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((course, index) => (
             <article
@@ -103,15 +120,6 @@ export function CourseDashboard() {
                 {course.description}
               </p>
             </article>
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-3" aria-label="正在加载课程">
-          {[0, 1, 2].map((item) => (
-            <div
-              className="h-48 animate-pulse rounded-2xl bg-slate-200"
-              key={item}
-            />
           ))}
         </div>
       )}

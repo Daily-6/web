@@ -2,6 +2,7 @@
 /node_modules/
 /frontend/node_modules/
 /backend/node_modules/
+/agent/node_modules/
 /.npm/
 /.yarn/
 .pnp
@@ -31,9 +32,11 @@
 /backend/.midway-serverless/
 /backend/.faas_debug_tmp/
 
-# Runtime database files; keep the empty directory marker
-/backend/data/*
+# Runtime database files; keep seed JSON and the empty directory marker
+/backend/data/*.sqlite
+/backend/data/*.sqlite-*
 !/backend/data/.gitkeep
+!/backend/data/*.json
 
 # Root-level and shared build caches
 /dist/

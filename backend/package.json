@@ -4,7 +4,7 @@
   "private": true,
   "main": "bootstrap.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=local mwtsc --watch --run @midwayjs/mock/app.js --kill-timeout 5000",
+    "dev": "cross-env NODE_ENV=local ts-node --transpile-only bootstrap.js",
     "build": "mwtsc --cleanOutDir",
     "start": "cross-env NODE_ENV=production node bootstrap.js",
     "lint": "tsc --noEmit",
@@ -21,6 +21,7 @@
     "@types/node": "^24.0.0",
     "cross-env": "^10.1.0",
     "mwtsc": "^1.16.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }

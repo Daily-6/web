@@ -1,33 +1,21 @@
-export interface Course {
-  id: number;
-  title: string;
-  description: string;
-  createdAt: string;
-}
-
-export interface CreateCourseInput {
-  title: string;
-  description: string;
-}
-
-export interface Team {
+export type Team = {
   id: number;
   name: string;
   shortName: string;
   country: string;
   groupName: string;
   logoUrl: string;
-}
+};
 
-export interface Stadium {
+export type Stadium = {
   id: number;
   name: string;
   city: string;
   country: string;
   capacity: number;
-}
+};
 
-export interface Match {
+export type Match = {
   id: number;
   homeTeamId: number;
   awayTeamId: number;
@@ -40,15 +28,9 @@ export interface Match {
   groupName: string;
   homeTeam?: Team;
   awayTeam?: Team;
-}
+};
 
-export interface User {
-  id: number;
-  username: string;
-  createdAt: string;
-}
-
-export interface Prediction {
+export type Prediction = {
   id: number;
   userId: number;
   matchId: number;
@@ -56,48 +38,25 @@ export interface Prediction {
   awayScore: number;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface CreatePredictionInput {
-  userId: number;
-  matchId: number;
-  homeScore: number;
-  awayScore: number;
-}
-
-export interface Comment {
+export type Comment = {
   id: number;
   userId: number;
   matchId: number;
   content: string;
   createdAt: string;
   username?: string;
-}
+};
 
-export interface CreateCommentInput {
-  userId: number;
-  matchId: number;
-  content: string;
-}
-
-export interface Favorite {
+export type Favorite = {
   id: number;
   userId: number;
   matchId: number;
   createdAt: string;
-}
+};
 
-export interface CreateFavoriteInput {
-  userId: number;
-  matchId: number;
-}
-
-export interface MatchResultInput {
-  homeScore: number;
-  awayScore: number;
-}
-
-export interface StandingEntry {
+export type StandingEntry = {
   teamId: number;
   teamName: string;
   shortName: string;
@@ -109,9 +68,13 @@ export interface StandingEntry {
   goalsAgainst: number;
   goalDifference: number;
   points: number;
-}
+};
 
-export interface GroupStandings {
+export type GroupStandings = {
   groupName: string;
   teams: StandingEntry[];
-}
+};
+
+export type ApiResponse<T> = {
+  data: T;
+};

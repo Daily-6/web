@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Web Development Course API
-  version: 0.1.0
+  title: 世界杯赛事信息与互动预测平台 API
+  version: 0.2.0
 servers:
   - url: http://localhost:7001
 paths:
@@ -9,6 +9,7 @@ paths:
     get:
       operationId: getHealth
       summary: 检查 API 状态
+      x-spec: AC-01
       responses:
         "200":
           description: API 正常
@@ -16,6 +17,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Health"
+
   /api/courses:
     get:
       operationId: listCourses
@@ -55,6 +57,423 @@ paths:
                     $ref: "#/components/schemas/Course"
         "400":
           description: 请求体不符合课程数据规则
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/teams:
+    get:
+      operationId: listTeams
+      summary: 获取所有球队
+      x-spec: AC-T01
+      responses:
+        "200":
+          description: 球队列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Team"
+
+  /api/teams/{id}:
+    get:
+      operationId: getTeam
+      summary: 获取球队详情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 球队详情
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: "#/components/schemas/Team"
+                      - type: "null"
+
+  /api/matches:
+    get:
+      operationId: listMatches
+      summary: 获取比赛列表
+      x-spec: AC-M01
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, live, finished]
+        - name: stage
+          in: query
+          schema:
+            type: string
+            enum: [group, round16, quarter, semi, third, final]
+        - name: groupName
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 比赛列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Match"
+
+  /api/matches/{id}:
+    get:
+      operationId: getMatch
+      summary: 获取比赛详情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 比赛详情
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Match"
+        "404":
+          description: 比赛不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/matches/{id}/result:
+    post:
+      operationId: updateMatchResult
+      summary: 录入比赛结果
+      x-spec: AC-M02
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchResultInput"
+      responses:
+        "200":
+          description: 结果录入成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Match"
+        "400":
+          description: 比分无效
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 比赛不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/standings:
+    get:
+      operationId: getStandings
+      summary: 获取积分榜
+      x-spec: AC-S01
+      responses:
+        "200":
+          description: 积分榜
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GroupStandings"
+
+  /api/predictions:
+    get:
+      operationId: getPredictions
+      summary: 获取比分预测
+      x-spec: AC-P01
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: matchId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 预测结果
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: "#/components/schemas/Prediction"
+                      - type: "null"
+                      - type: array
+                        items:
+                          $ref: "#/components/schemas/Prediction"
+        "400":
+          description: 缺少参数
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createPrediction
+      summary: 提交比分预测
+      x-spec: AC-P02
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePrediction"
+      responses:
+        "200":
+          description: 预测成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Prediction"
+        "400":
+          description: 参数无效或比赛已开始
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 比赛或用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/comments:
+    get:
+      operationId: listComments
+      summary: 获取评论列表
+      x-spec: AC-C01
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 评论列表
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+        "400":
+          description: 缺少 matchId 参数
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createComment
+      summary: 发表评论
+      x-spec: AC-C02
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComment"
+      responses:
+        "200":
+          description: 评论成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Comment"
+        "400":
+          description: 参数无效
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 比赛或用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/favorites:
+    get:
+      operationId: getFavorites
+      summary: 获取收藏列表或检查收藏状态
+      x-spec: AC-F01
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: matchId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 收藏列表或状态
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    oneOf:
+                      - type: array
+                        items:
+                          $ref: "#/components/schemas/Favorite"
+                      - type: object
+                        properties:
+                          favorited:
+                            type: boolean
+        "400":
+          description: 缺少 userId 参数
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: addFavorite
+      summary: 添加收藏
+      x-spec: AC-F02
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFavorite"
+      responses:
+        "200":
+          description: 收藏成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Favorite"
+        "400":
+          description: 参数无效或已收藏
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 比赛或用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: removeFavorite
+      summary: 取消收藏
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 取消成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      removed:
+                        type: boolean
+        "400":
+          description: 缺少参数
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: 收藏记录不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
   schemas:
     Health:
@@ -68,6 +487,13 @@ components:
         timestamp:
           type: string
           format: date-time
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
     Course:
       type: object
       required: [id, title, description, createdAt]
@@ -94,3 +520,204 @@ components:
           type: string
           minLength: 2
           maxLength: 500
+
+    Team:
+      type: object
+      required: [id, name, shortName, country, groupName]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        shortName:
+          type: string
+        country:
+          type: string
+        groupName:
+          type: string
+        logoUrl:
+          type: string
+
+    Match:
+      type: object
+      required: [id, homeTeamId, awayTeamId, matchDate, status, stage, venue]
+      properties:
+        id:
+          type: integer
+        homeTeamId:
+          type: integer
+        awayTeamId:
+          type: integer
+        homeScore:
+          type: integer
+          nullable: true
+        awayScore:
+          type: integer
+          nullable: true
+        matchDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [scheduled, live, finished]
+        stage:
+          type: string
+          enum: [group, round16, quarter, semi, third, final]
+        venue:
+          type: string
+        homeTeam:
+          $ref: "#/components/schemas/Team"
+        awayTeam:
+          $ref: "#/components/schemas/Team"
+
+    MatchResultInput:
+      type: object
+      required: [homeScore, awayScore]
+      properties:
+        homeScore:
+          type: integer
+          minimum: 0
+        awayScore:
+          type: integer
+          minimum: 0
+
+    StandingEntry:
+      type: object
+      required:
+        [
+          teamId,
+          teamName,
+          shortName,
+          played,
+          won,
+          drawn,
+          lost,
+          goalsFor,
+          goalsAgainst,
+          goalDifference,
+          points,
+        ]
+      properties:
+        teamId:
+          type: integer
+        teamName:
+          type: string
+        shortName:
+          type: string
+        played:
+          type: integer
+        won:
+          type: integer
+        drawn:
+          type: integer
+        lost:
+          type: integer
+        goalsFor:
+          type: integer
+        goalsAgainst:
+          type: integer
+        goalDifference:
+          type: integer
+        points:
+          type: integer
+
+    GroupStandings:
+      type: object
+      required: [groupName, teams]
+      properties:
+        groupName:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/StandingEntry"
+
+    CreatePrediction:
+      type: object
+      required: [userId, matchId, homeScore, awayScore]
+      properties:
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        homeScore:
+          type: integer
+          minimum: 0
+        awayScore:
+          type: integer
+          minimum: 0
+
+    Prediction:
+      type: object
+      required:
+        [id, userId, matchId, homeScore, awayScore, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateComment:
+      type: object
+      required: [userId, matchId, content]
+      properties:
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        content:
+          type: string
+          maxLength: 500
+
+    Comment:
+      type: object
+      required: [id, userId, matchId, content, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        username:
+          type: string
+
+    CreateFavorite:
+      type: object
+      required: [userId, matchId]
+      properties:
+        userId:
+          type: integer
+        matchId:
+          type: integer
+
+    Favorite:
+      type: object
+      required: [id, userId, matchId, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time

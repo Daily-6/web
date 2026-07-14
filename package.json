@@ -24,5 +24,8 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "prettier": "^3.6.2"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.2"
   }
 }
