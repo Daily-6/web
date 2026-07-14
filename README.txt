@@ -3,7 +3,7 @@
 
 一、GitHub 仓库地址
 ------------------
-（请填写你的仓库地址，若为私有仓库请邀请 sunshinezxf@hotmail.com）
+https://github.com/Daily-6/web
 
 
 二、技术栈
@@ -37,23 +37,12 @@ docker compose -f infra/compose.yaml up
 - SQLite 数据库: backend/data/course-demo.sqlite（首次启动自动创建）
 - Docker 中数据库挂载于 volume course-data，路径 /app/backend/data/
 
+六、课程改进建议
 
-六、Web 服务公网访问地址
---------------------------
-（如有请填写，无则留空）
-
-
-七、课程改进建议（可选）
---------------------------
-（填写）
+七、课程最印象深刻的地方
 
 
-八、课程印象最深刻内容
-------------------------
-（填写）
-
-
-九、功能清单
+八、功能清单
 ------------
 [x] 赛程浏览（按小组筛选，104场比赛）
 [x] 球队信息（48支球队，分组展示，中文队名）
@@ -68,7 +57,7 @@ docker compose -f infra/compose.yaml up
 [x] Docker Compose 一键部署
 
 
-十、额外实现功能介绍
+九、额外实现功能介绍
 --------------------
 - 从 worldcup26.ir 获取2026世界杯真实数据作为种子数据
 - 48支球队中文名翻译

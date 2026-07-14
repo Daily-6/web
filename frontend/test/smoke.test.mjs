@@ -1,13 +1,69 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test, before, after } from "node:test";
+import { exec } from "node:child_process";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { rmSync } from "node:fs";
+
+const BASE_URL = "http://localhost:7001";
+const BACKEND_DIR = join(
+  fileURLToPath(new URL(".", import.meta.url)),
+  "..",
+  "..",
+  "backend",
+);
+const TEST_DB = join(BACKEND_DIR, "data", "test.sqlite");
+
+let serverProcess;
+
+async function waitForServer(url, timeout = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return;
+    } catch {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+  throw new Error(`Server at ${url} did not start within ${timeout}ms`);
+}
+
+before(async () => {
+  rmSync(TEST_DB, { force: true });
+  rmSync(TEST_DB + "-wal", { force: true });
+  rmSync(TEST_DB + "-shm", { force: true });
+  serverProcess = exec(
+    "npm run dev",
+    {
+      cwd: BACKEND_DIR,
+      env: { ...process.env, NODE_ENV: "local", DATABASE_PATH: "./data/test.sqlite" },
+    },
+    (error) => {
+      if (error && !error.killed) {
+        console.error("Server process error:", error);
+      }
+    },
+  );
+  await waitForServer(`${BASE_URL}/api/health`);
+});
+
+after(async () => {
+  if (serverProcess) {
+    const pid = serverProcess.pid;
+    if (process.platform === "win32") {
+      exec(`taskkill /PID ${pid} /T /F`);
+    } else {
+      serverProcess.kill("SIGTERM");
+    }
+  }
+});
 
 test("frontend test runner is configured", () => {
   assert.equal(typeof fetch, "function");
 });
 
 test("API contract validation - frontend consumption", async (t) => {
-  const BASE_URL = "http://localhost:7001";
-
   await t.test("AC-01: Health endpoint returns valid schema", async () => {
     const res = await fetch(`${BASE_URL}/api/health`);
     assert.equal(res.status, 200);
@@ -73,7 +129,7 @@ test("API contract validation - frontend consumption", async (t) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: 3,
-        matchId: 5,
+        matchId: 67,
         homeScore: 2,
         awayScore: 2,
       }),
@@ -82,10 +138,10 @@ test("API contract validation - frontend consumption", async (t) => {
     const createBody = await createRes.json();
     assert.ok(createBody.data);
     assert.equal(createBody.data.userId, 3);
-    assert.equal(createBody.data.matchId, 5);
+    assert.equal(createBody.data.matchId, 67);
 
     const getRes = await fetch(
-      `${BASE_URL}/api/predictions?userId=3&matchId=5`,
+      `${BASE_URL}/api/predictions?userId=3&matchId=67`,
     );
     assert.equal(getRes.status, 200);
     const getBody = await getRes.json();
@@ -99,7 +155,7 @@ test("API contract validation - frontend consumption", async (t) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: 3,
-        matchId: 9,
+        matchId: 5,
         homeScore: 1,
         awayScore: 0,
       }),
@@ -149,7 +205,7 @@ test("API contract validation - frontend consumption", async (t) => {
   });
 
   await t.test("AC-M02: Match result update", async () => {
-    const res = await fetch(`${BASE_URL}/api/matches/4/result`, {
+    const res = await fetch(`${BASE_URL}/api/matches/68/result`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ homeScore: 2, awayScore: 0 }),

@@ -1,7 +1,58 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test, before, after } from "node:test";
+import { exec } from "node:child_process";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { rmSync } from "node:fs";
 
 const BASE_URL = "http://localhost:7001";
+const BACKEND_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+const TEST_DB = join(BACKEND_DIR, "data", "test.sqlite");
+
+let serverProcess: any;
+
+async function waitForServer(url: string, timeout = 20000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return;
+    } catch {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+  throw new Error(`Server at ${url} did not start within ${timeout}ms`);
+}
+
+before(async () => {
+  rmSync(TEST_DB, { force: true });
+  rmSync(TEST_DB + "-wal", { force: true });
+  rmSync(TEST_DB + "-shm", { force: true });
+  serverProcess = exec(
+    "npm run dev",
+    {
+      cwd: BACKEND_DIR,
+      env: { ...process.env, NODE_ENV: "local", DATABASE_PATH: "./data/test.sqlite" },
+    },
+    (error) => {
+      if (error && !error.killed) {
+        console.error("Server process error:", error);
+      }
+    },
+  );
+  await waitForServer(`${BASE_URL}/api/health`);
+});
+
+after(async () => {
+  if (serverProcess) {
+    const pid = serverProcess.pid;
+    if (process.platform === "win32") {
+      exec(`taskkill /PID ${pid} /T /F`);
+    } else {
+      serverProcess.kill("SIGTERM");
+    }
+  }
+});
 
 test("API Contract Tests", async (t) => {
   await t.test(
@@ -124,7 +175,7 @@ test("API Contract Tests", async (t) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: 2,
-          matchId: 5,
+          matchId: 65,
           homeScore: 1,
           awayScore: 0,
         }),
@@ -133,7 +184,7 @@ test("API Contract Tests", async (t) => {
       const body = await res.json();
       assert.ok(body.data);
       assert.equal(body.data.userId, 2);
-      assert.equal(body.data.matchId, 5);
+      assert.equal(body.data.matchId, 65);
     },
   );
 
@@ -145,7 +196,7 @@ test("API Contract Tests", async (t) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: 2,
-          matchId: 9,
+          matchId: 5,
           homeScore: 1,
           awayScore: 0,
         }),
@@ -157,7 +208,9 @@ test("API Contract Tests", async (t) => {
   await t.test(
     "GET /api/predictions returns prediction for user+match",
     async () => {
-      const res = await fetch(`${BASE_URL}/api/predictions?userId=2&matchId=5`);
+      const res = await fetch(
+        `${BASE_URL}/api/predictions?userId=2&matchId=65`,
+      );
       assert.equal(res.status, 200);
       const body = await res.json();
       assert.ok(body.data);
@@ -220,7 +273,9 @@ test("API Contract Tests", async (t) => {
   await t.test(
     "GET /api/favorites?userId=&matchId= checks favorited",
     async () => {
-      const res = await fetch(`${BASE_URL}/api/favorites?userId=1&matchId=3`);
+      const res = await fetch(
+        `${BASE_URL}/api/favorites?userId=1&matchId=3`,
+      );
       assert.equal(res.status, 200);
       const body = await res.json();
       assert.equal(body.data.favorited, true);
@@ -228,9 +283,10 @@ test("API Contract Tests", async (t) => {
   );
 
   await t.test("DELETE /api/favorites removes favorite", async () => {
-    const res = await fetch(`${BASE_URL}/api/favorites?userId=1&matchId=3`, {
-      method: "DELETE",
-    });
+    const res = await fetch(
+      `${BASE_URL}/api/favorites?userId=1&matchId=3`,
+      { method: "DELETE" },
+    );
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.data.removed, true);
@@ -239,7 +295,7 @@ test("API Contract Tests", async (t) => {
   await t.test(
     "POST /api/matches/:id/result records result (AC-M02)",
     async () => {
-      const res = await fetch(`${BASE_URL}/api/matches/4/result`, {
+      const res = await fetch(`${BASE_URL}/api/matches/66/result`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ homeScore: 2, awayScore: 0 }),

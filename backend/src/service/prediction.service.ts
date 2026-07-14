@@ -33,8 +33,7 @@ export class PredictionService {
       throw new httpError.NotFoundError("比赛不存在");
     }
 
-    const matchDate = new Date(match.match_date.replace(" ", "T") + "Z");
-    if (match.status !== "scheduled" || matchDate <= new Date()) {
+    if (match.status !== "scheduled") {
       throw new httpError.BadRequestError("比赛已开始或已结束，无法预测");
     }
 
