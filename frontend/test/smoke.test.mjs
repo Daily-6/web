@@ -37,7 +37,11 @@ before(async () => {
     "npm run dev",
     {
       cwd: BACKEND_DIR,
-      env: { ...process.env, NODE_ENV: "local", DATABASE_PATH: "./data/test.sqlite" },
+      env: {
+        ...process.env,
+        NODE_ENV: "local",
+        DATABASE_PATH: "./data/test.sqlite",
+      },
     },
     (error) => {
       if (error && !error.killed) {

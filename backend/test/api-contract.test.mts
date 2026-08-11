@@ -32,7 +32,11 @@ before(async () => {
     "npm run dev",
     {
       cwd: BACKEND_DIR,
-      env: { ...process.env, NODE_ENV: "local", DATABASE_PATH: "./data/test.sqlite" },
+      env: {
+        ...process.env,
+        NODE_ENV: "local",
+        DATABASE_PATH: "./data/test.sqlite",
+      },
     },
     (error) => {
       if (error && !error.killed) {
@@ -273,9 +277,7 @@ test("API Contract Tests", async (t) => {
   await t.test(
     "GET /api/favorites?userId=&matchId= checks favorited",
     async () => {
-      const res = await fetch(
-        `${BASE_URL}/api/favorites?userId=1&matchId=3`,
-      );
+      const res = await fetch(`${BASE_URL}/api/favorites?userId=1&matchId=3`);
       assert.equal(res.status, 200);
       const body = await res.json();
       assert.equal(body.data.favorited, true);
@@ -283,10 +285,9 @@ test("API Contract Tests", async (t) => {
   );
 
   await t.test("DELETE /api/favorites removes favorite", async () => {
-    const res = await fetch(
-      `${BASE_URL}/api/favorites?userId=1&matchId=3`,
-      { method: "DELETE" },
-    );
+    const res = await fetch(`${BASE_URL}/api/favorites?userId=1&matchId=3`, {
+      method: "DELETE",
+    });
     assert.equal(res.status, 200);
     const body = await res.json();
     assert.equal(body.data.removed, true);
