@@ -53,20 +53,16 @@ before(async () => {
       windowsHide: true,
     });
   } else {
-    serverProcess = spawn(
-      "npm",
-      ["run", "dev"],
-      {
-        cwd: BACKEND_DIR,
-        env: {
-          ...process.env,
-          NODE_ENV: "local",
-          DATABASE_PATH: "./data/test.sqlite",
-        },
-        detached: true,
-        stdio: "ignore",
+    serverProcess = spawn("npm", ["run", "dev"], {
+      cwd: BACKEND_DIR,
+      env: {
+        ...process.env,
+        NODE_ENV: "local",
+        DATABASE_PATH: "./data/test.sqlite",
       },
-    );
+      detached: true,
+      stdio: "ignore",
+    });
   }
   await waitForServer(`${BASE_URL}/api/health`);
 });
