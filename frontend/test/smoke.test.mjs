@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test, before, after } from "node:test";
-import { exec } from "node:child_process";
+import { spawn, exec } from "node:child_process";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { rmSync } from "node:fs";
@@ -16,7 +16,19 @@ const TEST_DB = join(BACKEND_DIR, "data", "test.sqlite");
 
 let serverProcess;
 
-async function waitForServer(url, timeout = 20000) {
+function killTree(pid) {
+  try {
+    if (process.platform === "win32") {
+      exec(`taskkill /PID ${pid} /T /F`);
+    } else {
+      process.kill(-pid, "SIGTERM");
+    }
+  } catch {
+    /* already gone */
+  }
+}
+
+async function waitForServer(url, timeout = 30000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     try {
@@ -33,33 +45,36 @@ before(async () => {
   rmSync(TEST_DB, { force: true });
   rmSync(TEST_DB + "-wal", { force: true });
   rmSync(TEST_DB + "-shm", { force: true });
-  serverProcess = exec(
-    "npm run dev",
-    {
+  if (process.platform === "win32") {
+    serverProcess = spawn("npm run dev", {
       cwd: BACKEND_DIR,
       env: {
         ...process.env,
         NODE_ENV: "local",
         DATABASE_PATH: "./data/test.sqlite",
       },
-    },
-    (error) => {
-      if (error && !error.killed) {
-        console.error("Server process error:", error);
-      }
-    },
-  );
+      stdio: "ignore",
+      shell: true,
+      windowsHide: true,
+    });
+  } else {
+    serverProcess = spawn("npm", ["run", "dev"], {
+      cwd: BACKEND_DIR,
+      env: {
+        ...process.env,
+        NODE_ENV: "local",
+        DATABASE_PATH: "./data/test.sqlite",
+      },
+      detached: true,
+      stdio: "ignore",
+    });
+  }
   await waitForServer(`${BASE_URL}/api/health`);
 });
 
 after(async () => {
   if (serverProcess) {
-    const pid = serverProcess.pid;
-    if (process.platform === "win32") {
-      exec(`taskkill /PID ${pid} /T /F`);
-    } else {
-      serverProcess.kill("SIGTERM");
-    }
+    killTree(serverProcess.pid);
   }
 });
 
